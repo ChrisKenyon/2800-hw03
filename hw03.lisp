@@ -273,7 +273,7 @@ your function is supposed to do. That is what your own tests are for!
 ;; so that all the game rules can be passed as a single rule-list parameter
 (defdata rule-list (listof RPSLK-rule)) 
 (defconst *RPSLK-rules* (list *SP-rule* *PR-rule* *RL-rule* *LK-rule* *KS-rule*
-                                   *SL-rule* *LP-rule* *PK-rule* *KR-rule* *RS-rule*))
+                               *SL-rule* *LP-rule* *PK-rule* *KR-rule* *RS-rule*))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DEFINE
@@ -291,10 +291,30 @@ your function is supposed to do. That is what your own tests are for!
               (equal p2 (RPSLK-rule-c1 (first rules)))) -1)
         (t (getWinner p1 p2 (rest rules)))))
 
+(check= (getWinner 'R 'R *RPSLK-rules*) 0)
+(check= (getWinner 'P 'P *RPSLK-rules*) 0)
+(check= (getWinner 'S 'S *RPSLK-rules*) 0)
+(check= (getWinner 'K 'K *RPSLK-rules*) 0)
+(check= (getWinner 'L 'L *RPSLK-rules*) 0)
 (check= (getWinner 'S 'P *RPSLK-rules*) 1)
 (check= (getWinner 'P 'S *RPSLK-rules*) -1)
-(check= (getWinner 'S 'S *RPSLK-rules*) 0)
+(check= (getWinner 'P 'R *RPSLK-rules*) 1)
 (check= (getWinner 'R 'P *RPSLK-rules*) -1)
+(check= (getWinner 'R 'L *RPSLK-rules*) 1)
+(check= (getWinner 'L 'R *RPSLK-rules*) -1)
+(check= (getWinner 'K 'S *RPSLK-rules*) 0)
+(check= (getWinner 'S 'K *RPSLK-rules*) -1)
+(check= (getWinner 'S 'L *RPSLK-rules*) 0)
+(check= (getWinner 'L 'S *RPSLK-rules*) -1)
+(check= (getWinner 'L 'P *RPSLK-rules*) 0)
+(check= (getWinner 'P 'L *RPSLK-rules*) -1)
+(check= (getWinner 'K 'P *RPSLK-rules*) 0)
+(check= (getWinner 'P 'K *RPSLK-rules*) -1)
+(check= (getWinner 'K 'R *RPSLK-rules*) 0)
+(check= (getWinner 'R 'K *RPSLK-rules*) -1)
+(check= (getWinner 'S 'R *RPSLK-rules*) 0)
+(check= (getWinner 'R 'S *RPSLK-rules*) -1)
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; GIVEN
@@ -1034,4 +1054,4 @@ your function is supposed to do. That is what your own tests are for!
         (+ (* 20 0) (+ (* 20 75/100) (* 60 70/100))))
 (check= (calc-grade *cs2800-Test-noExam* 1234567) 
         (+ (* 20 18/24) (+ (* 20 75/100) (* 60 0))))
-(check= (calc-grade '() 1234567) 0)#|ACL2s-ToDo-Line|#
+(check= (calc-grade '() 1234567) 0)
