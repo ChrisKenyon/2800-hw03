@@ -321,8 +321,7 @@ your function is supposed to do. That is what your own tests are for!
 
 (defconst *p3* (list 'R 'R 'R 'R 'R))
 (defconst *p4* (list 'P 'P 'P 'P 'P))
-(check= (runmatches *p3* *p4* *RPSLK-rules*) -5)#|ACL2s-ToDo-Line|#
-
+(check= (runmatches *p3* *p4* *RPSLK-rules*) -5)
 
 
 
@@ -352,8 +351,16 @@ your function is supposed to do. That is what your own tests are for!
 (defunc getWinMsg (p1 p2 rules)
   :input-contract (and (RPSLKp p1)(RPSLKp p2)(rule-listp rules))
   :output-contract (COMMON-LISP::STRINGP (getWinMsg p1 p2 rules))
-  ...........)
+  (cond ((or (equal p1 p2)(endp rules)) "No Match")
+        ((or (and (equal p1 (RPSLK-rule-c1 (first rules))) 
+                  (equal p2 (RPSLK-rule-c2 (first rules))))
+             (and (equal p1 (RPSLK-rule-c2 (first rules))) 
+                  (equal p2 (RPSLK-rule-c1 (first rules)))))
+               (RPSLK-rule-outcome (first rules)))
+        (t (getWinMsg p1 p2 (rest rules)))))
 
+; TODO Test!!!
+ 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; GIVEN
 ;; genMatchMsg: RPSLK x RPSLK x rule-list -> List
@@ -383,9 +390,16 @@ your function is supposed to do. That is what your own tests are for!
                        (locp p2List)
                        (rule-listp rules))
   :output-contract (listp (runMatchesMsg p1List p2List rules))
- ...........)
+ (if (or (endp p1List)(endp p2List))
+    '()
+    (cons (getWinMsg (first p1List)(first p2List) rules)
+       (runMatchesMsg (rest p1List)(rest p2List) rules))))
 
 (runMatchesMsg *p1* *p3* *RPSLK-rules*)
+
+; TODO!!! Test!!!
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; BONUS: Make your own game that uses the functions above
@@ -413,7 +427,8 @@ your function is supposed to do. That is what your own tests are for!
  
 |#
 
-(defdata lor (listof rational))
+(defdata lor (listof rational))#|ACL2s-ToDo-Line|#
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; FIX
