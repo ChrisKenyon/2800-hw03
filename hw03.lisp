@@ -702,8 +702,7 @@ your function is supposed to do. That is what your own tests are for!
                          (grade-rec 55555555 1 'Wahl '(quiz 2 12))
                          (grade-rec 55555555 1 'Wahl '(quiz 1 24))))
 
-(check= (third (grade-rec-grade (first (rest *cs2800*)))) 18)#|ACL2s-ToDo-Line|#
-
+(check= (third (grade-rec-grade (first (rest *cs2800*)))) 18)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Part IV: Calculating your average
@@ -731,8 +730,18 @@ your function is supposed to do. That is what your own tests are for!
 (defunc student-marks-list (l sn)
   :input-contract (and (grade-spreadsheetp l)(studentIDp sn))
   :output-contract (grade-spreadsheetp (student-marks-list l sn))
-  .........)
+  (if (endp l)
+    nil
+    (if (equal (grade-rec-id (first l)) sn)
+      (app (list (first l)) (student-marks-list (rest l) sn))
+      (app nil (student-marks-list (rest l) sn)))))
 
+(check= (student-marks-list *cs2800* 1234567) (list (grade-rec 1234567 2 'Sprague '(assignment 5 85))
+                                                    (grade-rec 1234567 2 'Sprague '(quiz 4 18))
+                                                    (grade-rec 1234567 2 'Sprague '(quiz 3 12))))
+(check= (student-marks-list *cs2800* 55555555) (list (grade-rec 55555555 1 'Wahl '(assignment 4 75))
+                                                     (grade-rec 55555555 1 'Wahl '(quiz 2 12))
+                                                     (grade-rec 55555555 1 'Wahl '(quiz 1 24))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; GIVEN
@@ -763,7 +772,27 @@ your function is supposed to do. That is what your own tests are for!
 ;; (type-marks-list l type) takes a grade-spreadsheet plus a grade type 
 ;; and returns all records associated with that grade type.
 (defunc type-marks-list (l type)
-  ...........)
+  :input-contract (and (grade-spreadsheetp l)(grade-typep type))
+  :output-contract (grade-spreadsheetp (type-marks-list l type))
+  (if (endp l)
+    nil
+    (if (equal (get-grade-type (first l)) type)
+      (app (list (first l)) (type-marks-list (rest l) type))
+      (app nil (type-marks-list (rest l) type)))))
+
+; LOL this function is literally just student-marks-list again, I feel like
+; I should wrap them into a single abstracted fucnction with an additonal param
+; But I don't know if that's even possible in this language.
+
+(check= (type-marks-list *cs2800* 'quiz) (list (grade-rec 1234567 2 'Sprague '(quiz 4 18))
+                                               (grade-rec 1234567 2 'Sprague '(quiz 3 12))
+                                               (grade-rec 55555555 1 'Wahl '(quiz 2 12))
+                                               (grade-rec 55555555 1 'Wahl '(quiz 1 24))))
+
+(check= (type-marks-list *cs2800* 'assignment) (list (grade-rec 1234567 2 'Sprague '(assignment 5 85))
+                                                     (grade-rec 55555555 1 'Wahl '(assignment 4 75))))
+
+(check= (type-marks-list *cs2800* 'exam) '())
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; GIVEN
@@ -797,7 +826,42 @@ your function is supposed to do. That is what your own tests are for!
 ;; and the maximum number of entries to keep n and 
 ;; returns the mean/average of the highest n scores in l.
 (defunc mean-top-n (l n)
-  ........)
+  :input-contract (and (grade-spreadsheetp l) (posp n) (not (endp l)))
+  :output-contract (rationalp (mean-top-n l n))
+  (if (>= n (len l))
+    (/ (sum-lor (extract-scores l)) (len l))  ; if n is larger than the length of l, return the total average
+    (/ (sum-lor (top-n-values (extract-scores l) n)) n))) ; if n is smaller than length of l, return the average of top n
+
+(check= (mean-top-n (list (grade-rec 1234567 2 'Sprague '(quiz 4 18))
+                          (grade-rec 1234567 2 'Sprague '(quiz 3 12))
+                          (grade-rec 55555555 1 'Wahl '(quiz 2 12))
+                          (grade-rec 55555555 1 'Wahl '(quiz 1 24)))
+                  1) 
+        24)
+(check= (mean-top-n (list (grade-rec 1234567 2 'Sprague '(quiz 4 18))
+                          (grade-rec 1234567 2 'Sprague '(quiz 3 12))
+                          (grade-rec 55555555 1 'Wahl '(quiz 2 12))
+                          (grade-rec 55555555 1 'Wahl '(quiz 1 24)))
+                  2) 
+        21)
+(check= (mean-top-n (list (grade-rec 1234567 2 'Sprague '(quiz 4 18))
+                          (grade-rec 1234567 2 'Sprague '(quiz 3 12))
+                          (grade-rec 55555555 1 'Wahl '(quiz 2 12))
+                          (grade-rec 55555555 1 'Wahl '(quiz 1 24)))
+                  3) 
+        18)
+(check= (mean-top-n (list (grade-rec 1234567 2 'Sprague '(quiz 4 18))
+                          (grade-rec 1234567 2 'Sprague '(quiz 3 12))
+                          (grade-rec 55555555 1 'Wahl '(quiz 2 12))
+                          (grade-rec 55555555 1 'Wahl '(quiz 1 24)))
+                  4) 
+        33/2)
+(check= (mean-top-n (list (grade-rec 1234567 2 'Sprague '(quiz 4 18))
+                          (grade-rec 1234567 2 'Sprague '(quiz 3 12))
+                          (grade-rec 55555555 1 'Wahl '(quiz 2 12))
+                          (grade-rec 55555555 1 'Wahl '(quiz 1 24)))
+                  5) 
+        33/2)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; GIVEN
@@ -808,7 +872,7 @@ your function is supposed to do. That is what your own tests are for!
 ;; and the maximum score permitted for one of these grades (max)
 ;; and returns the value the grade type contributes to your final grade
 ;; (thus an average of 90% on 10 homeworks would return 18
-;; and the call would be (calc-grade-hlp 90 100 20)
+;; and the call would be (calc-grade-hlp 90 20 100)
 ;; This helper method just make it easier for ACL2s to prove contracts.
 (defunc calc-grade-hlp (mean pct max)
   :input-contract (and (rationalp mean)
@@ -825,7 +889,23 @@ your function is supposed to do. That is what your own tests are for!
 ;; type calculates the mark to be given.  Summing the results from 
 ;; each calc-mark call should give the final percent in the course.
 (defunc calc-grade (l sn)
-  .............)
+  :input-contract (and (grade-spreadsheetp l) (studentIDp sn))
+  :output-contract (rationalp (calc-grade l sn))
+  (let* ((grades (student-marks-list l sn)) ; returns a grade-spreadsheet
+         (quizzes (type-marks-list grades 'quiz)) ; returns a grade-spreadsheet of quizzes
+         (assigs (type-marks-list grades 'assignment)) ; returns a grade-spreadsheet of assignments
+         (exams (type-marks-list grades 'exam))) ; returns a grade-spreadsheet of exams
+         
+    (+ (if (endp quizzes)
+         0
+         (calc-grade-hlp (mean-top-n quizzes *num-quizzes*) *pct-quizzes* *quiz-max*))
+       (+ (if (endp exams)
+            0
+            (calc-grade-hlp (mean-top-n exams *num-exams*) *pct-exams* 100))
+          (if (endp assigs)
+            0
+            (calc-grade-hlp (mean-top-n assigs *num-assignments*) *pct-assignments* 100))))))
+            
 
 ;; Another set of marks to test your code against.
 (defconst *cs2800-Test* (list (grade-rec 1234567 2 'Sprague '(quiz 22 18))
@@ -866,4 +946,92 @@ your function is supposed to do. That is what your own tests are for!
 (check= (calc-grade *cs2800-Test* 1234567) 
         (+ (* 20 18/24) (+ (* 20 75/100) (* 60 70/100))))
 
-;; Add additional tests based on your spreadsheet.
+; Proper scope for tests is to test only the function and not the sub-functions, as the sub-
+; functions should have their own test cases. Therefore, the following test cases are not
+; necessary, as they are redundant:
+; 1. A test where the original spreadsheet has multiple students (tested in student-marks-list)
+
+; Test cases with no 'exam, 'quiz, or 'assignment in them are necessary, as mean-top-n will not
+; take an empty list if it is the result of a call to type-marks-list (which can return the empty list)
+; and a guard against this is written into the calc-grade function.
+
+(defconst *cs2800-Test-noQuiz* (list (grade-rec 1234567 2 'Sprague '(assignment 11 75))
+                                     (grade-rec 1234567 2 'Sprague '(assignment 10 75))
+                                     (grade-rec 1234567 2 'Sprague '(assignment 9 75))
+                                     (grade-rec 1234567 2 'Sprague '(assignment 8 0))
+                                     (grade-rec 1234567 2 'Sprague '(assignment 7 75))
+                                     (grade-rec 1234567 2 'Sprague '(assignment 6 65))
+                                     (grade-rec 1234567 2 'Sprague '(assignment 5 55))
+                                     (grade-rec 1234567 2 'Sprague '(assignment 4 85))
+                                     (grade-rec 1234567 2 'Sprague '(assignment 3 95))
+                                     (grade-rec 1234567 2 'Sprague '(assignment 2 70))
+                                     (grade-rec 1234567 2 'Sprague '(assignment 1 80))
+                                     (grade-rec 1234567 2 'Sprague '(exam 2 65))
+                                     (grade-rec 1234567 2 'Sprague '(exam 2 75))))
+
+(defconst *cs2800-Test-noExam* (list (grade-rec 1234567 2 'Sprague '(quiz 22 18))
+                                     (grade-rec 1234567 2 'Sprague '(quiz 21 18))
+                                     (grade-rec 1234567 2 'Sprague '(quiz 20 18))
+                                     (grade-rec 1234567 2 'Sprague '(quiz 19 24))
+                                     (grade-rec 1234567 2 'Sprague '(quiz 18 18))
+                                     (grade-rec 1234567 2 'Sprague '(quiz 17 18))
+                                     (grade-rec 1234567 2 'Sprague '(quiz 16 18))
+                                     (grade-rec 1234567 2 'Sprague '(quiz 15 18))
+                                     (grade-rec 1234567 2 'Sprague '(quiz 14 18))
+                                     (grade-rec 1234567 2 'Sprague '(quiz 13 12))
+                                     (grade-rec 1234567 2 'Sprague '(quiz 12 12))
+                                     (grade-rec 1234567 2 'Sprague '(quiz 11 12))
+                                     (grade-rec 1234567 2 'Sprague '(quiz 10 18))
+                                     (grade-rec 1234567 2 'Sprague '(quiz 9 18))
+                                     (grade-rec 1234567 2 'Sprague '(quiz 8 18))
+                                     (grade-rec 1234567 2 'Sprague '(quiz 7 18))
+                                     (grade-rec 1234567 2 'Sprague '(quiz 6 18))
+                                     (grade-rec 1234567 2 'Sprague '(quiz 5 18))
+                                     (grade-rec 1234567 2 'Sprague '(quiz 4 18))
+                                     (grade-rec 1234567 2 'Sprague '(quiz 3 18))
+                                     (grade-rec 1234567 2 'Sprague '(quiz 2 18))
+                                     (grade-rec 1234567 2 'Sprague '(quiz 1 18))
+                                     (grade-rec 1234567 2 'Sprague '(assignment 11 75))
+                                     (grade-rec 1234567 2 'Sprague '(assignment 10 75))
+                                     (grade-rec 1234567 2 'Sprague '(assignment 9 75))
+                                     (grade-rec 1234567 2 'Sprague '(assignment 8 0))
+                                     (grade-rec 1234567 2 'Sprague '(assignment 7 75))
+                                     (grade-rec 1234567 2 'Sprague '(assignment 6 65))
+                                     (grade-rec 1234567 2 'Sprague '(assignment 5 55))
+                                     (grade-rec 1234567 2 'Sprague '(assignment 4 85))
+                                     (grade-rec 1234567 2 'Sprague '(assignment 3 95))
+                                     (grade-rec 1234567 2 'Sprague '(assignment 2 70))
+                                     (grade-rec 1234567 2 'Sprague '(assignment 1 80))))
+
+(defconst *cs2800-Test-noAssignment* (list (grade-rec 1234567 2 'Sprague '(quiz 22 18))
+                                           (grade-rec 1234567 2 'Sprague '(quiz 21 18))
+                                           (grade-rec 1234567 2 'Sprague '(quiz 20 18))
+                                           (grade-rec 1234567 2 'Sprague '(quiz 19 24))
+                                           (grade-rec 1234567 2 'Sprague '(quiz 18 18))
+                                           (grade-rec 1234567 2 'Sprague '(quiz 17 18))
+                                           (grade-rec 1234567 2 'Sprague '(quiz 16 18))
+                                           (grade-rec 1234567 2 'Sprague '(quiz 15 18))
+                                           (grade-rec 1234567 2 'Sprague '(quiz 14 18))
+                                           (grade-rec 1234567 2 'Sprague '(quiz 13 12))
+                                           (grade-rec 1234567 2 'Sprague '(quiz 12 12))
+                                           (grade-rec 1234567 2 'Sprague '(quiz 11 12))
+                                           (grade-rec 1234567 2 'Sprague '(quiz 10 18))
+                                           (grade-rec 1234567 2 'Sprague '(quiz 9 18))
+                                           (grade-rec 1234567 2 'Sprague '(quiz 8 18))
+                                           (grade-rec 1234567 2 'Sprague '(quiz 7 18))
+                                           (grade-rec 1234567 2 'Sprague '(quiz 6 18))
+                                           (grade-rec 1234567 2 'Sprague '(quiz 5 18))
+                                           (grade-rec 1234567 2 'Sprague '(quiz 4 18))
+                                           (grade-rec 1234567 2 'Sprague '(quiz 3 18))
+                                           (grade-rec 1234567 2 'Sprague '(quiz 2 18))
+                                           (grade-rec 1234567 2 'Sprague '(quiz 1 18))
+                                           (grade-rec 1234567 2 'Sprague '(exam 2 65))
+                                           (grade-rec 1234567 2 'Sprague '(exam 2 75))))
+
+(check= (calc-grade *cs2800-Test-noAssignment* 1234567) 
+        (+ (* 20 18/24) (+ (* 20 0) (* 60 70/100))))
+(check= (calc-grade *cs2800-Test-noQuiz* 1234567) 
+        (+ (* 20 0) (+ (* 20 75/100) (* 60 70/100))))
+(check= (calc-grade *cs2800-Test-noExam* 1234567) 
+        (+ (* 20 18/24) (+ (* 20 75/100) (* 60 0))))
+(check= (calc-grade '() 1234567) 0)#|ACL2s-ToDo-Line|#
