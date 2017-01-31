@@ -246,16 +246,15 @@ your function is supposed to do. That is what your own tests are for!
 ;; RPSLK is the set of possible signs one can make and a loc is a list
 ;; or series of matches that use these signs.
 :logic
-(defdata RPSLK (oneof 'R 'P 'S 'L 'K))#|ACL2s-ToDo-Line|#
-
+(defdata RPSLK (oneof 'R 'P 'S 'L 'K))
 (defdata loc (listof RPSLK))
 (defconst *p1* (list 'S 'S 'S 'S 'S))
 
 ;; DEFINE a record which describes win/loss cases. The defconst below 
 ;; should work using your record. You can change this later if you 
 ;; solve the bonus question:
-(defdata RPSLK-rule (record (p1Choice . RPSLK)
-                            (p2Choice . RPSLK)
+(defdata RPSLK-rule (record (c1 . RPSLK)
+                            (c2 . RPSLK)
                             (outcome . string)))
 
 (defconst *SP-rule* (RPSLK-rule 'S 'P "Scissors cuts Paper"))
@@ -272,9 +271,9 @@ your function is supposed to do. That is what your own tests are for!
 
 ;; Now bundle these rules in whatever way you think would be most effective
 ;; so that all the game rules can be passed as a single rule-list parameter
-(defdata rule-list (enum '(*SP-rule* *PR-rule* *RL-rule* *LK-rule* *KS-rule*
-                           *SL-rule* *LP-rule* *PK-rule* *KR-rule* *RS-rule*))) 
-(defconst *RPSLK-rules* .............)
+(defdata rule-list (listof RPSLK-rule)) 
+(defconst *RPSLK-rules* (list *SP-rule* *PR-rule* *RL-rule* *LK-rule* *KS-rule*
+                                   *SL-rule* *LP-rule* *PK-rule* *KR-rule* *RS-rule*))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DEFINE
@@ -285,7 +284,12 @@ your function is supposed to do. That is what your own tests are for!
 (defunc getWinner (p1 p2 rules)
   :input-contract (and (RPSLKp p1)(RPSLKp p2)(rule-listp rules))
   :output-contract (integerp (getWinner p1 p2 rules))
-  .............)
+  (cond ((or (equal p1 p2)(endp rules)) 0)
+        ((and (equal p1 (RPSLK-rule-c1 (first rules))) 
+              (equal p2 (RPSLK-rule-c2 (first rules)))) 1)
+        ((and (equal p1 (RPSLK-rule-c2 (first rules))) 
+              (equal p2 (RPSLK-rule-c1 (first rules)))) -1)
+        (t (getWinner p1 p2 (rest rules)))))
 
 (check= (getWinner 'S 'P *RPSLK-rules*) 1)
 (check= (getWinner 'P 'S *RPSLK-rules*) -1)
@@ -317,7 +321,15 @@ your function is supposed to do. That is what your own tests are for!
 
 (defconst *p3* (list 'R 'R 'R 'R 'R))
 (defconst *p4* (list 'P 'P 'P 'P 'P))
-(check= (runmatches *p3* *p4* *RPSLK-rules*) -5)
+(check= (runmatches *p3* *p4* *RPSLK-rules*) -5)#|ACL2s-ToDo-Line|#
+
+
+
+
+
+; TODO!!! Add tests all throughout Problem 1
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Let's make things prettier and easier to follow. Write a
