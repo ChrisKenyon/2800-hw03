@@ -80,7 +80,7 @@ One group member will create a group in BlackBoard.
    it will cost you points, so please read carefully.
 
 
-Names of ALL group members: FirstName1 LastName1, FirstName2 LastName2, ...
+Names of ALL group members: Izaak Branch, Chris Kenyon
 
 Note: There will be a 10 pt penalty if your names do not follow 
 this format.
@@ -570,8 +570,7 @@ your function is supposed to do. That is what your own tests are for!
 ;; Add your own tests here.
 (check= (median '(1 2 3 4 5)) 3)
 (check= (median '(5 2 4 3 1)) 3)
-(check= (median '(3 1 2 4)) 3)#|ACL2s-ToDo-Line|#
-
+(check= (median '(3 1 2 4)) 3)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -596,18 +595,24 @@ your function is supposed to do. That is what your own tests are for!
 ;; First define an enumerated datatype for evaluation type 
 ;; (exam, assignment or quiz).
 ;; DEFINE
-(defdata grade-type .....)
+(defdata grade-type (enum '(Exam Assignment Quiz)))
 
 (check= (grade-typep 'exam) t)
 (check= (grade-typep 'assign) nil)
 (check= (grade-typep 'assignment) t)
+(check= (grade-typep 'quiz) t)
 
 ;; Define the section number as a number between 1 and 5 (inclusive)
 ;; Professor Wahl teaches Section 1 (9:15), 
 ;; Professor Manolios teaches 3 (1:35) and 5 (4:35)
 ;; and I (Sprague) teach sections 2 (9:15) and 4 (1:35)
 ; DEFINE
-(defdata section-number .....)
+(defdata section-number (range integer (1 <= _ <= 5)))
+
+(check= (section-numberp 1) t)
+(check= (section-numberp 0) nil)
+(check= (section-numberp 1/2) nil)
+(check= (section-numberp -1) nil)
 
 ;; The enumerated set of three instructors
 (defdata instructor (enum '(Manolios Wahl Sprague)))
@@ -618,21 +623,32 @@ your function is supposed to do. That is what your own tests are for!
 
 ;; Student IDs consist of positive numbers 6 to 10 digits long (assuming
 ;; no preceding 0s). DEFINE the permitted range
-(defdata studentID .......)
+(defdata studentID (range integer (100000 <= _ <= 9999999999)))
+
+(check= (studentIDp 1234) nil)
+(check= (studentIDp 1234567) t)
+(check= (studentIDp 000001) nil)
 
 ;; Student exam and assignment grades are exclusively between 0 and 100 
 ;; but can include part marks. Quiz grades are between 0 and 24 and are
 ;; integers.
 ;; Make data definitions (ranges) to represent valid student grades.
 (defconst *quiz-max* 24)
-(defdata pct-range ...........)
-(defdata quiz-range ...........)
+(defdata pct-range (range rational (0 <= _ <= 100)))
+(defdata quiz-range (range integer (0 <= _ <= *quiz-max*)))
+
+(check= (pct-rangep 1/2) t)
+(check= (quiz-rangep 1/2) nil)
+(check= (pct-rangep 50) t)
+(check= (quiz-rangep 50) nil)
 
 ;; Define information for the 3 different evalution types
 ;; with each type having a type, number (positive number) and grade.
-..........
+(defdata quiz-grade (list 'Quiz integer quiz-range))
+(defdata assignment-grade (list 'Assignment integer pct-range))
+(defdata exam-grade (list 'Exam integer pct-range))
 ;; Union the 3 evaluation types.
-.............
+(defdata eval-grade (oneof quiz-grade exam-grade assignment-grade))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; The grades of each type are numbered, starting from 1. For example, hw02
@@ -641,7 +657,7 @@ your function is supposed to do. That is what your own tests are for!
 ;; (grade type, grade number and score).  
 ;; The field names should be id, section, prof and grade 
 ;; Define this record type:
-(defdata grade-rec ..........)
+(defdata grade-rec (record (id . studentID) (section . section-number) (prof . instructor) (grade . eval-grade)))
 
 (check= (grade-rec-grade (grade-rec 1234567 3 'Manolios (list 'assignment 5 85))) '(assignment 5 85))
 (check= (grade-rec-prof (grade-rec 1234567 3 'Manolios (list 'assignment 5 85))) 'Manolios)
@@ -675,6 +691,10 @@ your function is supposed to do. That is what your own tests are for!
 ; contain your actual grades, but do not use your actual NEU ids as your
 ; student ids (confidentiality). Your check= tests should use your own 
 ; spreadsheet. Here is a modifiable example
+
+; What concept is this portion of the homework teaching? What a constant is?
+; How to define one? There isn't anything novel here to check= on, I'm confident
+; that grade-rec works from above and I'm confident that list works as a builtin
 (defconst *cs2800* (list (grade-rec 1234567 2 'Sprague '(assignment 5 85))
                          (grade-rec 1234567 2 'Sprague '(quiz 4 18))
                          (grade-rec 1234567 2 'Sprague '(quiz 3 12))
@@ -682,7 +702,8 @@ your function is supposed to do. That is what your own tests are for!
                          (grade-rec 55555555 1 'Wahl '(quiz 2 12))
                          (grade-rec 55555555 1 'Wahl '(quiz 1 24))))
 
-(check= (third (grade-rec-grade (first (rest *cs2800*)))) 18)
+(check= (third (grade-rec-grade (first (rest *cs2800*)))) 18)#|ACL2s-ToDo-Line|#
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Part IV: Calculating your average
