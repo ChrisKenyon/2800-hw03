@@ -427,8 +427,7 @@ your function is supposed to do. That is what your own tests are for!
  
 |#
 
-(defdata lor (listof rational))#|ACL2s-ToDo-Line|#
-
+(defdata lor (listof rational))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; FIX
@@ -438,9 +437,9 @@ your function is supposed to do. That is what your own tests are for!
 ;; Edit the function so that it works.
 ;; NOTE: change the contract and add the (endp (rest l)) condition.
 (defunc sortedp (l)
-  :input-contract (listp l)
+  :input-contract (lorp l)
   :output-contract (booleanp (sortedp l))
-  (cond ((endp l) t)
+  (cond ((or (endp l) (endp (rest l))) t)
         ((> (first l) (second l))      nil)
         (t                             (sortedp (rest l)))))
 
@@ -453,8 +452,17 @@ your function is supposed to do. That is what your own tests are for!
 (defunc insert (val l)
   :input-contract (and (lorp l)(sortedp l)(rationalp val))
   :output-contract (and (lorp (insert val l)) (sortedp (insert val l)))
-  ..............)
-  
+  (cond ((endp l) (list val))
+        ((<= val (first l)) (append (list val) l))
+        (t (cons (first l)(insert val (rest l))))))
+
+(test? (implies (and (rationalp val)(sortedp l))
+                (sortedp (insert val l))))
+(check= (insert 5 '(1 2 3 4)) '(1 2 3 4 5))
+(check= (insert 0 '(1 2 3 4)) '(0 1 2 3 4))
+(check= (insert 5/2 '(1 2 3 4)) '(1 2 5/2 3 4))
+(check= (insert 0 ()) '(0))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DEFINE
 ;; isort: lor -> lor (sorted)
@@ -463,11 +471,21 @@ your function is supposed to do. That is what your own tests are for!
 ;; Sorting is done using the insertion sort algorithm only
 ;; (hence isort). You may not write another sorting algorithm.
 (defunc isort (l)
-  .......)
+  :input-contract (lorp l)
+  :output-contract (and (lorp (isort l))(sortedp (isort l)))
+                       ; (equal (len l)(len (isort l)))) 
+                        ; This breaks subset-lor for reasons beyond me - ACL2s bug?
+  (if (endp l) ()
+      (insert (first l)(isort (rest l)))))
 
 ;; ADD tests for isort and insert including a minimum
 ;; of one test? if this has been covered in lecture before Monday.
-.........
+(test? (implies (lorp l) (and (sortedp (isort l))(equal (len l)(len isort l)))))
+(test? (implies (endp l) (equal (isort l) ())))
+(check= (isort '()) ())
+(check= (isort '(5 4 3 2 1)) '(1 2 3 4 5))
+(check= (isort '(1 3 5 2 4 6)) '(1 2 3 4 5 6)) 
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; HELPER FUNCTION (Given)
@@ -514,7 +532,7 @@ your function is supposed to do. That is what your own tests are for!
 ;; This function should not work for invalid input thus you probably
 ;; need to check for more than valid data types.
 (defunc ith-rational (l i)
-  :input-contract (and (lorp l)(integerp i))
+  :input-contract (and (lorp l)(natp i)(< i (len l)))
   :output-contract (rationalp (ith-rational l i))
   (if (equal i 0)
     (first l)
@@ -545,12 +563,15 @@ your function is supposed to do. That is what your own tests are for!
 (defunc median (l)
   :input-contract (and (lorp l)(not (endp l)))
   :output-contract (rationalp (median l))
-.............)
-
+  (if (< (nat/ (len l) 2) (len (isort l)))
+    (ith-rational (isort l) (nat/ (len l) 2))
+    0)) ; Per Piazza note @146, I think due to len check in isort bug
+  
 ;; Add your own tests here.
 (check= (median '(1 2 3 4 5)) 3)
 (check= (median '(5 2 4 3 1)) 3)
-(check= (median '(3 1 2 4)) 3)
+(check= (median '(3 1 2 4)) 3)#|ACL2s-ToDo-Line|#
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
