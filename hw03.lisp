@@ -302,18 +302,18 @@ your function is supposed to do. That is what your own tests are for!
 (check= (getWinner 'R 'P *RPSLK-rules*) -1)
 (check= (getWinner 'R 'L *RPSLK-rules*) 1)
 (check= (getWinner 'L 'R *RPSLK-rules*) -1)
-(check= (getWinner 'K 'S *RPSLK-rules*) 0)
+(check= (getWinner 'K 'S *RPSLK-rules*) 1)
 (check= (getWinner 'S 'K *RPSLK-rules*) -1)
-(check= (getWinner 'S 'L *RPSLK-rules*) 0)
+(check= (getWinner 'S 'L *RPSLK-rules*) 1)
 (check= (getWinner 'L 'S *RPSLK-rules*) -1)
-(check= (getWinner 'L 'P *RPSLK-rules*) 0)
+(check= (getWinner 'L 'P *RPSLK-rules*) 1)
 (check= (getWinner 'P 'L *RPSLK-rules*) -1)
-(check= (getWinner 'K 'P *RPSLK-rules*) 0)
-(check= (getWinner 'P 'K *RPSLK-rules*) -1)
-(check= (getWinner 'K 'R *RPSLK-rules*) 0)
+(check= (getWinner 'P 'K *RPSLK-rules*) 1)
+(check= (getWinner 'K 'P *RPSLK-rules*) -1)
+(check= (getWinner 'K 'R *RPSLK-rules*) 1)
 (check= (getWinner 'R 'K *RPSLK-rules*) -1)
-(check= (getWinner 'S 'R *RPSLK-rules*) 0)
-(check= (getWinner 'R 'S *RPSLK-rules*) -1)
+(check= (getWinner 'R 'S *RPSLK-rules*) 1)
+(check= (getWinner 'S 'R *RPSLK-rules*) -1)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -337,18 +337,30 @@ your function is supposed to do. That is what your own tests are for!
 
 
 ;; PLAYER 2
+;(defconst *p1* (list 'S 'S 'S 'S 'S))
 (defconst *p2* (list 'R 'P 'S 'L 'K))
-
 (defconst *p3* (list 'R 'R 'R 'R 'R))
 (defconst *p4* (list 'P 'P 'P 'P 'P))
+
+(check= (runmatches *p1* *p1* *RPSLK-rules*) 0)
+(check= (runmatches *p1* *p2* *RPSLK-rules*) 0)
+(check= (runmatches *p1* *p3* *RPSLK-rules*) -5)
+(check= (runmatches *p1* *p4* *RPSLK-rules*) 5)
+
+(check= (runmatches *p2* *p1* *RPSLK-rules*) 0)
+(check= (runmatches *p2* *p2* *RPSLK-rules*) 0)
+(check= (runmatches *p2* *p3* *RPSLK-rules*) 0)
+(check= (runmatches *p2* *p4* *RPSLK-rules*) 0)
+
+(check= (runmatches *p3* *p1* *RPSLK-rules*) 5)
+(check= (runmatches *p3* *p2* *RPSLK-rules*) 0)
+(check= (runmatches *p3* *p3* *RPSLK-rules*) 0)
 (check= (runmatches *p3* *p4* *RPSLK-rules*) -5)
 
-
-
-
-; TODO!!! Add tests all throughout Problem 1
-
-
+(check= (runmatches *p4* *p1* *RPSLK-rules*) -5)
+(check= (runmatches *p4* *p2* *RPSLK-rules*) 0)
+(check= (runmatches *p4* *p3* *RPSLK-rules*) 5)
+(check= (runmatches *p4* *p4* *RPSLK-rules*) 0)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Let's make things prettier and easier to follow. Write a
@@ -379,7 +391,31 @@ your function is supposed to do. That is what your own tests are for!
                (RPSLK-rule-outcome (first rules)))
         (t (getWinMsg p1 p2 (rest rules)))))
 
-; TODO Test!!!
+(check= (getWinMsg 'R 'R *RPSLK-rules*) "No Match")
+(check= (getWinMsg 'P 'P *RPSLK-rules*) "No Match")
+(check= (getWinMsg 'S 'S *RPSLK-rules*) "No Match")
+(check= (getWinMsg 'K 'K *RPSLK-rules*) "No Match")
+(check= (getWinMsg 'L 'L *RPSLK-rules*) "No Match")
+(check= (getWinMsg 'S 'P *RPSLK-rules*) "Scissors cuts Paper")
+(check= (getWinMsg 'P 'S *RPSLK-rules*) "Scissors cuts Paper")
+(check= (getWinMsg 'P 'R *RPSLK-rules*) "Paper covers Rock")
+(check= (getWinMsg 'R 'P *RPSLK-rules*) "Paper covers Rock")
+(check= (getWinMsg 'R 'L *RPSLK-rules*) "Rock crushes Lizard")
+(check= (getWinMsg 'L 'R *RPSLK-rules*) "Rock crushes Lizard")
+(check= (getWinMsg 'K 'S *RPSLK-rules*) "Spock smashes Scissors")
+(check= (getWinMsg 'S 'K *RPSLK-rules*) "Spock smashes Scissors")
+(check= (getWinMsg 'S 'L *RPSLK-rules*) "Scissors decapitates Lizard")
+(check= (getWinMsg 'L 'S *RPSLK-rules*) "Scissors decapitates Lizard")
+(check= (getWinMsg 'L 'P *RPSLK-rules*) "Lizard eats Paper")
+(check= (getWinMsg 'P 'L *RPSLK-rules*) "Lizard eats Paper")
+(check= (getWinMsg 'P 'K *RPSLK-rules*) "Paper disproves Spock")
+(check= (getWinMsg 'K 'P *RPSLK-rules*) "Paper disproves Spock")
+(check= (getWinMsg 'K 'R *RPSLK-rules*) "Spock vaporizes Rock")
+(check= (getWinMsg 'R 'K *RPSLK-rules*) "Spock vaporizes Rock")
+(check= (getWinMsg 'R 'S *RPSLK-rules*) "Rock crushes Scissors")
+(check= (getWinMsg 'S 'R *RPSLK-rules*) "Rock crushes Scissors")
+(check= (getWinMsg 'L 'K *RPSLK-rules*) "Lizard poisons Spock")
+(check= (getWinMsg 'K 'L *RPSLK-rules*) "Lizard poisons Spock")
  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; GIVEN
@@ -415,12 +451,17 @@ your function is supposed to do. That is what your own tests are for!
     (cons (getWinMsg (first p1List)(first p2List) rules)
        (runMatchesMsg (rest p1List)(rest p2List) rules))))
 
-(runMatchesMsg *p1* *p3* *RPSLK-rules*)
-
-; TODO!!! Test!!!
-
-
-
+(check= (runMatchesMsg *p1* *p3* *RPSLK-rules*) (list "Rock crushes Scissors"
+                                                      "Rock crushes Scissors"
+                                                      "Rock crushes Scissors"
+                                                      "Rock crushes Scissors"
+                                                      "Rock crushes Scissors"))
+(check= (runMatchesMsg *p2* *p3* *RPSLK-rules*) (list "No Match" 
+                                                      "Paper covers Rock"
+                                                      "Rock crushes Scissors"
+                                                      "Rock crushes Lizard"
+                                                      "Spock vaporizes Rock"))
+(test? (implies (and (locp p1List)(locp p2List)(rule-listp rules)) (listp (runMatchesMsg p1List p2List rules))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; BONUS: Make your own game that uses the functions above
 ;; but have different rules, more rules, or different names
@@ -1054,4 +1095,4 @@ your function is supposed to do. That is what your own tests are for!
         (+ (* 20 0) (+ (* 20 75/100) (* 60 70/100))))
 (check= (calc-grade *cs2800-Test-noExam* 1234567) 
         (+ (* 20 18/24) (+ (* 20 75/100) (* 60 0))))
-(check= (calc-grade '() 1234567) 0)
+(check= (calc-grade '() 1234567) 0)#|ACL2s-ToDo-Line|#
